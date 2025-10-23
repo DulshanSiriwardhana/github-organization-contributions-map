@@ -1,0 +1,25 @@
+{
+  "name": "github-organization-contributions-map",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DulshanSiriwardhana/github-organization-contributions-map.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DulshanSiriwardhana/github-organization-contributions-map/issues"
+  },
+  "homepage": "https://github.com/DulshanSiriwardhana/github-organization-contributions-map#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2"
+  }
+}
