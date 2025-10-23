@@ -80,11 +80,13 @@ app.get("/leaderboard-badge", async (req, res) => {
       
       const rowBg = isTop3 ? 'rgba(59, 130, 246, 0.1)' : 'rgba(30, 41, 59, 0.4)';
       const barColor = isTop3 
-        ? `rgba(${i === 0 ? '251, 191, 36' : i === 1 ? '168, 85, 247' : '59, 130, 246'}, 0.3)`
+        ? (i === 0 ? 'rgba(251, 191, 36, 0.3)' : i === 1 ? 'rgba(168, 85, 247, 0.3)' : 'rgba(59, 130, 246, 0.3)')
         : 'rgba(71, 85, 105, 0.3)';
       const barStroke = isTop3
-        ? `rgb(${i === 0 ? '251, 191, 36' : i === 1 ? '168, 85, 247' : '59, 130, 246'})`
+        ? (i === 0 ? 'rgb(251, 191, 36)' : i === 1 ? 'rgb(168, 85, 247)' : 'rgb(59, 130, 246)')
         : 'rgb(100, 116, 139)';
+      const textColor = isTop3 ? (i === 0 ? '#fbbf24' : i === 1 ? '#a855f7' : '#3b82f6') : '#64748b';
+      const xOffset = isTop3 ? 48 : 42;
 
       svgContent += `
         <g filter="url(#shadow)">
@@ -94,14 +96,14 @@ app.get("/leaderboard-badge", async (req, res) => {
         <rect x="${padding + 4}" y="${y + 4}" width="${barWidth}" height="36" rx="6" fill="${barColor}" stroke="${barStroke}" stroke-width="1.5" opacity="0.8"/>
         
         <text x="${padding + 16}" y="${y + 27}" font-size="16" font-weight="600" fill="#ffffff">
-          ${isTop3 ? medals[i] : `#${i + 1}`}
+          ${isTop3 ? medals[i] : '#' + (i + 1)}
         </text>
         
-        <text x={padding + ${isTop3 ? 48 : 42}} y={y + 27} font-size="14" font-weight="500" fill="#e2e8f0">
+        <text x="${padding + xOffset}" y="${y + 27}" font-size="14" font-weight="500" fill="#e2e8f0">
           ${u.username}
         </text>
         
-        <text x="${width - padding - 16}" y="${y + 27}" font-size="14" font-weight="700" fill="${isTop3 ? (i === 0 ? '#fbbf24' : i === 1 ? '#a855f7' : '#3b82f6') : '#64748b'}" text-anchor="end">
+        <text x="${width - padding - 16}" y="${y + 27}" font-size="14" font-weight="700" fill="${textColor}" text-anchor="end">
           ${u.commits.toLocaleString()}
         </text>
       `;
