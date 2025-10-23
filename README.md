@@ -4,7 +4,7 @@
 
 ## 🏆 Top Contributors
 
-<img src="https://github-organization-contributions-m.vercel.app/leaderboard-badge?org=DeedLink" alt="DreamSphere Leaderboard" width="480"/>
+<img src="https://github-organization-contributions-m.vercel.app/leaderboard-badge?org=DreamSphere-Org" alt="DreamSphere Leaderboard" width="480"/>
 
 <sub>Updated dynamically • Powered by GitHub API</sub>
 
