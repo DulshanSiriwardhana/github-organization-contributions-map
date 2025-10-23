@@ -29,15 +29,23 @@ app.get("/leaderboard-badge", async (req, res) => {
       .sort((a, b) => b.commits - a.commits)
       .slice(0, 5);
 
-    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="350" height="${40 + leaderboard.length * 20}">
-      <style>
-        .title { font: bold 14px sans-serif; }
-        .row { font: 12px sans-serif; }
-      </style>
-      <text x="10" y="20" class="title">Leaderboard: ${org}</text>`;
+    const width = 400;
+    const rowHeight = 40;
+    const height = 60 + leaderboard.length * rowHeight;
+
+    let svgContent = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" style="font-family:Arial, sans-serif;">
+        <rect width="100%" height="100%" rx="10" ry="10" fill="#1E1E2F"/>
+        <text x="20" y="35" font-size="18" font-weight="bold" fill="#FFD700">Leaderboard: ${org}</text>
+      `;
 
     leaderboard.forEach((u, i) => {
-      svgContent += `<text x="10" y="${40 + i*20}" class="row">${i+1}. ${u.username} — ${u.commits} commits</text>`;
+      const y = 70 + i * rowHeight;
+      svgContent += `
+        <rect x="20" y="${y - 25}" width="${width - 40}" height="30" rx="5" ry="5" fill="#2E2E4D"/>
+        <text x="30" y="${y - 5}" font-size="14" fill="#FFFFFF">${i + 1}. ${u.username}</text>
+        <text x="${width - 80}" y="${y - 5}" font-size="14" fill="#FFD700">${u.commits} commits</text>
+      `;
     });
 
     svgContent += `</svg>`;
