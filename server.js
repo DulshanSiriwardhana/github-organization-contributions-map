@@ -111,7 +111,7 @@ app.get("/leaderboard-badge", async (req, res) => {
     const statsRows = Math.ceil(stats.length / statsColumns);
     const statsSectionHeight =
       statsRows * statsCardHeight + Math.max(0, statsRows - 1) * statsCardGap;
-    const statsY = padding + headerHeight + statsGap + 40;
+    const statsY = padding + headerHeight + statsGap;
     const rowsStartY = statsY + statsSectionHeight + rowsGap;
     const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding + 40;
     const safeOrg = formatDisplayText(org, 32);
@@ -176,7 +176,7 @@ app.get("/leaderboard-badge", async (req, res) => {
       const col = index % statsColumns;
       const row = Math.floor(index / statsColumns);
       const cardX = padding + col * (cardWidth + statsCardGap);
-      const cardY = statsY + row * (statsCardHeight + statsCardGap);
+      const cardY = 60+ statsY + row * (statsCardHeight + statsCardGap);
       svgContent += `
         <g transform="translate(${cardX}, ${cardY})" filter="url(#shadow)">
           <rect width="${cardWidth}" height="${statsCardHeight}" rx="26" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.2)"/>
