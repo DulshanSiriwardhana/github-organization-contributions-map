@@ -233,12 +233,12 @@ app.get("/leaderboard-badge", async (req, res) => {
           <text x="${textStartX}" y="${rowHeight / 2 - 10}" font-size="19" font-weight="600" fill="#f8fafc">
             ${usernameDisplay}
           </text>
-          <text x="${textStartX}" y="${rowHeight / 2 + 24}" font-size="13" fill="#cbd5f5">
+          <text x="${textStartX}" y="${rowHeight / 2 + 26}" font-size="13" fill="#e2e8f0">
             ${user.commits.toLocaleString()} commits · ${medalLabel}
           </text>
 
-          <rect x="${progressX}" y="${rowHeight - 44}" width="${progressMaxWidth}" height="16" rx="8" fill="rgba(148,163,184,0.2)"/>
-          <rect x="${progressX}" y="${rowHeight - 44}" width="${barWidth}" height="16" rx="8" fill="url(#${progressGradId})" />
+          <rect x="${progressX}" y="${rowHeight - 54}" width="${progressMaxWidth}" height="18" rx="9" fill="rgba(148,163,184,0.18)"/>
+          <rect x="${progressX}" y="${rowHeight - 54}" width="${barWidth}" height="18" rx="9" fill="url(#${progressGradId})" />
 
           <g transform="translate(${percentCardX}, ${percentCardY})">
             <rect width="${percentCardWidth}" height="64" rx="32" fill="rgba(10,20,38,0.92)" stroke="${accent}" stroke-width="1"/>
