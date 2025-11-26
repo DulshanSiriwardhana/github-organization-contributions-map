@@ -75,16 +75,16 @@ app.get("/leaderboard-badge", async (req, res) => {
 
     const totalContributors = contributorsList.length;
     const repoCount = repos.length;
-    const width = 620;
-    const rowHeight = 96;
-    const headerHeight = 126;
-    const statsCardHeight = 90;
+    const width = 640;
+    const rowHeight = 104;
+    const headerHeight = 138;
+    const statsCardHeight = 98;
     const statsColumns = 2;
-    const statsCardGap = 16;
-    const padding = 36;
+    const statsCardGap = 20;
+    const padding = 40;
     const footerHeight = 44;
-    const statsGap = 24;
-    const rowsGap = 40;
+    const statsGap = 28;
+    const rowsGap = 48;
 
     const maxCommits = leaderboard[0]?.commits || 1;
     const medals = [
@@ -116,7 +116,7 @@ app.get("/leaderboard-badge", async (req, res) => {
     const safeOrg = formatDisplayText(org, 32);
 
     let svgContent = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Top contributors for ${safeOrg}" style="font-family:'Inter', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Top contributors for ${safeOrg}" style="font-family:'Spectral', 'Inter', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, serif;">
         <defs>
           <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#010409"/>
@@ -160,12 +160,12 @@ app.get("/leaderboard-badge", async (req, res) => {
         </g>
 
         <g transform="translate(${padding}, ${padding})">
-          <rect width="${width - padding * 2}" height="${headerHeight - 22}" rx="22" fill="url(#headerGrad)" opacity="0.2" stroke="rgba(255,255,255,0.15)"/>
-          <text x="22" y="36" font-size="12" fill="#a5f3fc" letter-spacing="5">ORGANIZATION</text>
-          <text x="22" y="74" font-size="34" font-weight="700" fill="#f8fafc">${safeOrg}</text>
-          <text x="22" y="104" font-size="15" fill="#dbeafe">Top contributors across the organization</text>
-          <rect x="${width - padding * 2 - 140}" y="24" width="120" height="36" rx="18" fill="rgba(15,23,42,0.6)" stroke="rgba(255,255,255,0.25)"/>
-          <text x="${width - padding * 2 - 80}" y="48" font-size="13" font-weight="600" fill="#f1f5f9" text-anchor="middle">Top 5 Badge</text>
+          <rect width="${width - padding * 2}" height="${headerHeight - 30}" rx="26" fill="url(#headerGrad)" opacity="0.22" stroke="rgba(255,255,255,0.12)"/>
+          <text x="26" y="40" font-size="12" fill="#a5f3fc" letter-spacing="5">ORGANIZATION</text>
+          <text x="26" y="86" font-size="38" font-weight="700" fill="#f8fafc">${safeOrg}</text>
+          <text x="26" y="118" font-size="16" fill="#dbeafe">Top contributors across the organization</text>
+          <rect x="${width - padding * 2 - 148}" y="30" width="132" height="40" rx="20" fill="rgba(15,23,42,0.6)" stroke="rgba(255,255,255,0.25)"/>
+          <text x="${width - padding * 2 - 82}" y="58" font-size="14" font-weight="600" fill="#f1f5f9" text-anchor="middle">Top 5 Badge</text>
         </g>
     `;
 
@@ -178,9 +178,9 @@ app.get("/leaderboard-badge", async (req, res) => {
       const cardY = statsY + row * (statsCardHeight + statsCardGap);
       svgContent += `
         <g transform="translate(${cardX}, ${cardY})" filter="url(#shadow)">
-          <rect width="${cardWidth}" height="${statsCardHeight}" rx="18" fill="rgba(15,23,42,0.88)" stroke="rgba(148,163,184,0.2)"/>
-          <text x="20" y="34" font-size="12" fill="#94a3b8" letter-spacing="2">${stat.label.toUpperCase()}</text>
-          <text x="20" y="66" font-size="26" font-weight="700" fill="#f8fafc">${stat.value}</text>
+          <rect width="${cardWidth}" height="${statsCardHeight}" rx="22" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.22)"/>
+          <text x="24" y="38" font-size="12" fill="#94a3b8" letter-spacing="2">${stat.label.toUpperCase()}</text>
+          <text x="24" y="72" font-size="28" font-weight="700" fill="#f8fafc">${stat.value}</text>
         </g>
       `;
     });
@@ -188,8 +188,8 @@ app.get("/leaderboard-badge", async (req, res) => {
     leaderboard.forEach((user, index) => {
       const rowTop = rowsStartY + index * rowHeight;
       const rowCardWidth = width - padding * 2;
-      const percentCardWidth = 160;
-      const textStartX = padding + 118;
+      const percentCardWidth = 170;
+      const textStartX = padding + 128;
       const progressX = textStartX;
       const progressMaxWidth = Math.max(
         140,
@@ -206,11 +206,11 @@ app.get("/leaderboard-badge", async (req, res) => {
       const usernameDisplay = formatDisplayText(user.username, 22);
       const progressGradId = `progressGrad${index}`;
       const avatarClipId = `avatarClip${index}`;
-      const avatarRadius = 30;
-      const avatarCenterX = padding + 58;
+      const avatarRadius = 34;
+      const avatarCenterX = padding + 64;
       const medalLabel =
         index === 0 ? "Most active" : index === 1 ? "Runner up" : index === 2 ? "Key contributor" : "Top contributor";
-      const percentCardX = width - padding - percentCardWidth - 12;
+      const percentCardX = width - padding - percentCardWidth - 18;
       const percentCardY = rowHeight / 2 - 26;
 
       svgContent += `
@@ -225,27 +225,27 @@ app.get("/leaderboard-badge", async (req, res) => {
         </defs>
 
         <g transform="translate(0, ${rowTop})" filter="url(#shadow)">
-          <rect x="${padding}" y="6" width="${rowCardWidth}" height="${rowHeight - 14}" rx="24" fill="rgba(7,13,26,0.95)" stroke="rgba(148,163,184,0.18)"/>
+          <rect x="${padding}" y="6" width="${rowCardWidth}" height="${rowHeight - 18}" rx="26" fill="rgba(7,13,26,0.95)" stroke="rgba(148,163,184,0.16)"/>
 
-          <circle cx="${avatarCenterX}" cy="${rowHeight / 2}" r="${avatarRadius + 6}" fill="rgba(15,23,42,0.9)" stroke="${accent}" stroke-width="1.5"/>
+          <circle cx="${avatarCenterX}" cy="${rowHeight / 2}" r="${avatarRadius + 6}" fill="rgba(15,23,42,0.9)" stroke="${accent}" stroke-width="1.4"/>
           <image href="${user.avatar}" x="${avatarCenterX - avatarRadius}" y="${rowHeight / 2 - avatarRadius}" width="${avatarRadius * 2}" height="${avatarRadius * 2}" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice"/>
 
-          <text x="${textStartX}" y="${rowHeight / 2 - 6}" font-size="17" font-weight="600" fill="#f8fafc">
+          <text x="${textStartX}" y="${rowHeight / 2 - 8}" font-size="18" font-weight="600" fill="#f8fafc">
             ${usernameDisplay}
           </text>
-          <text x="${textStartX}" y="${rowHeight / 2 + 20}" font-size="13" fill="#cbd5f5">
+          <text x="${textStartX}" y="${rowHeight / 2 + 22}" font-size="13" fill="#cbd5f5">
             ${user.commits.toLocaleString()} commits · ${medalLabel}
           </text>
 
-          <rect x="${progressX}" y="${rowHeight - 32}" width="${progressMaxWidth}" height="12" rx="6" fill="rgba(148,163,184,0.25)"/>
-          <rect x="${progressX}" y="${rowHeight - 32}" width="${barWidth}" height="12" rx="6" fill="url(#${progressGradId})" />
+          <rect x="${progressX}" y="${rowHeight - 36}" width="${progressMaxWidth}" height="14" rx="7" fill="rgba(148,163,184,0.22)"/>
+          <rect x="${progressX}" y="${rowHeight - 36}" width="${barWidth}" height="14" rx="7" fill="url(#${progressGradId})" />
 
           <g transform="translate(${percentCardX}, ${percentCardY})">
-            <rect width="${percentCardWidth}" height="52" rx="26" fill="rgba(10,20,38,0.92)" stroke="${accent}" stroke-width="1"/>
+            <rect width="${percentCardWidth}" height="58" rx="29" fill="rgba(10,20,38,0.92)" stroke="${accent}" stroke-width="1"/>
             <text x="${percentCardWidth / 2}" y="28" font-size="18" font-weight="700" fill="${accent}" text-anchor="middle">
               ${contributionShare.toFixed(1)}%
             </text>
-            <text x="${percentCardWidth / 2}" y="42" font-size="12" fill="#94a3b8" text-anchor="middle">
+            <text x="${percentCardWidth / 2}" y="44" font-size="12" fill="#94a3b8" text-anchor="middle">
               ${medalIcon} · ${medalLabel}
             </text>
           </g>
