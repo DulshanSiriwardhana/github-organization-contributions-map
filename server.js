@@ -111,8 +111,8 @@ app.get("/leaderboard-badge", async (req, res) => {
     const statsRows = Math.ceil(stats.length / statsColumns);
     const statsSectionHeight =
       statsRows * statsCardHeight + Math.max(0, statsRows - 1) * statsCardGap;
-    const statsY = padding + headerHeight + statsGap;
-    const rowsStartY = statsY + statsSectionHeight + rowsGap + 40;
+    const statsY = padding + headerHeight + statsGap + 40;
+    const rowsStartY = statsY + statsSectionHeight + rowsGap;
     const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding + 40;
     const safeOrg = formatDisplayText(org, 32);
 
