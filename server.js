@@ -79,13 +79,16 @@ app.get("/leaderboard-badge", async (req, res) => {
     const rowHeight = 160;
     const contributorCardPaddingY = 24;
     const rowShadowBleed = 40;
+    const contributorCardHeight = rowHeight - contributorCardPaddingY * 2;
+    const contributorRowGap = 18;
+    const contributorRowStep = contributorCardHeight + contributorRowGap;
     const headerHeight = 152;
     const statsCardHeight = 112;
     const statsColumns = 2;
     const statsCardGap = 24;
     const padding = 48;
     const footerHeight = 48;
-    const statsGap = 0;
+    const statsGap = 10;
     const rowsGap = 10;
 
     const maxCommits = leaderboard[0]?.commits || 1;
@@ -114,8 +117,11 @@ app.get("/leaderboard-badge", async (req, res) => {
       statsRows * statsCardHeight + Math.max(0, statsRows - 1) * statsCardGap;
     const statsY = padding + headerHeight + statsGap;
     const rowsStartY = statsY + statsSectionHeight + rowsGap;
-    const height =
-      rowsStartY + leaderboard.length * rowHeight + footerHeight + padding + rowShadowBleed;
+    const rowsBlockHeight =
+      leaderboard.length > 0
+        ? rowHeight + Math.max(0, leaderboard.length - 1) * contributorRowStep
+        : 0;
+    const height = rowsStartY + rowsBlockHeight + footerHeight + padding + rowShadowBleed;
     const safeOrg = formatDisplayText(org, 32);
 
     let svgContent = `
@@ -189,7 +195,7 @@ app.get("/leaderboard-badge", async (req, res) => {
     });
 
     leaderboard.forEach((user, index) => {
-      const rowTop = rowsStartY + index * rowHeight;
+      const rowTop = rowsStartY + index * contributorRowStep;
       const rowCardWidth = width - padding * 2;
       const percentCardWidth = 190;
       const textStartX = padding + 140;
