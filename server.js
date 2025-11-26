@@ -79,7 +79,7 @@ app.get("/leaderboard-badge", async (req, res) => {
     const rowHeight = 120;
     const contributorCardPaddingY = 16;
     const headerHeight = 152;
-    const statsCardHeight = 140;
+    const statsCardHeight = 112;
     const statsColumns = 2;
     const statsCardGap = 24;
     const padding = 48;
@@ -113,7 +113,7 @@ app.get("/leaderboard-badge", async (req, res) => {
       statsRows * statsCardHeight + Math.max(0, statsRows - 1) * statsCardGap;
     const statsY = padding + headerHeight + statsGap;
     const rowsStartY = statsY + statsSectionHeight + rowsGap;
-    const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding;
+    const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding + 40;
     const safeOrg = formatDisplayText(org, 32);
 
     let svgContent = `
