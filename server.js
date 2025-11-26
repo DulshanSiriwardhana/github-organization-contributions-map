@@ -3,116 +3,227 @@ import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const GH_HEADERS = {
+  headers: {
+    "User-Agent": "github-organization-contributions-map",
+    Accept: "application/vnd.github+json"
+  }
+};
+
+const sanitize = (value = "") =>
+  String(value).replace(/[&<>"']/g, char => {
+    const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    return entities[char] || char;
+  });
 
 app.get("/leaderboard-badge", async (req, res) => {
   const org = req.query.org;
   if (!org) return res.status(400).send("Missing org parameter");
 
   try {
-    const reposRes = await fetch(`https://api.github.com/orgs/${org}/repos`);
+    const reposRes = await fetch(`https://api.github.com/orgs/${org}/repos`, GH_HEADERS);
+    if (!reposRes.ok) {
+      return res.status(reposRes.status).send("Unable to fetch organization repositories");
+    }
+
     const repos = await reposRes.json();
+    if (!Array.isArray(repos)) {
+      return res.status(404).send("Organization repositories not found");
+    }
 
     const contributorMap = {};
+    let totalCommits = 0;
 
     for (const repo of repos) {
-      const contribRes = await fetch(`https://api.github.com/repos/${org}/${repo.name}/contributors`);
+      const contribRes = await fetch(
+        `https://api.github.com/repos/${org}/${repo.name}/contributors`,
+        GH_HEADERS
+      );
+
+      if (!contribRes.ok) continue;
+
       const contributors = await contribRes.json();
       if (!Array.isArray(contributors)) continue;
 
-      contributors.forEach(u => {
-        contributorMap[u.login] = (contributorMap[u.login] || 0) + u.contributions;
+      contributors.forEach(user => {
+        if (!contributorMap[user.login]) {
+          contributorMap[user.login] = {
+            username: user.login,
+            commits: 0,
+            avatar: user.avatar_url || `https://github.com/${user.login}.png?size=64`
+          };
+        }
+
+        contributorMap[user.login].commits += user.contributions;
+        totalCommits += user.contributions;
       });
     }
 
-    const leaderboard = Object.entries(contributorMap)
-      .map(([username, commits]) => ({ username, commits }))
+    const contributorsList = Object.values(contributorMap);
+    if (!contributorsList.length) {
+      return res.status(200).send("No contributor data available for this organization.");
+    }
+
+    const leaderboard = contributorsList
       .sort((a, b) => b.commits - a.commits)
       .slice(0, 5);
 
-    const width = 480;
-    const rowHeight = 52;
-    const headerHeight = 80;
-    const padding = 24;
-    const height = headerHeight + leaderboard.length * rowHeight + padding * 2;
+    const totalContributors = contributorsList.length;
+    const repoCount = repos.length;
+    const width = 560;
+    const rowHeight = 76;
+    const headerHeight = 110;
+    const statsSectionHeight = 88;
+    const padding = 28;
+    const footerHeight = 36;
+    const height =
+      headerHeight + statsSectionHeight + leaderboard.length * rowHeight + padding * 2 + footerHeight;
 
     const maxCommits = leaderboard[0]?.commits || 1;
-    const medals = ['🥇', '🥈', '🥉'];
+    const medals = [
+      { icon: "🥇", accent: "#fbbf24" },
+      { icon: "🥈", accent: "#cbd5f5" },
+      { icon: "🥉", accent: "#f97316" }
+    ];
+    const lastUpdated = new Date().toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
+
+    const stats = [
+      { label: "Repos scanned", value: repoCount.toLocaleString() },
+      { label: "Unique contributors", value: totalContributors.toLocaleString() },
+      { label: "Commits analyzed", value: totalCommits.toLocaleString() }
+    ];
 
     let svgContent = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" style="font-family:'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Top contributors for ${sanitize(
+        org
+      )}" style="font-family:'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <defs>
           <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+            <stop offset="0%" stop-color="#020617"/>
+            <stop offset="50%" stop-color="#0f172a"/>
+            <stop offset="100%" stop-color="#1e1b4b"/>
           </linearGradient>
           <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+            <stop offset="0%" stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#8b5cf6"/>
           </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#22d3ee"/>
+          </linearGradient>
+          <pattern id="mesh" width="80" height="80" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+            <rect width="80" height="80" fill="rgba(255,255,255,0.02)"/>
+            <path d="M 0 80 L 80 0" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+          </pattern>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25"/>
+          </filter>
+          <filter id="softGlow">
+            <feGaussianBlur stdDeviation="30" result="blur"/>
             <feMerge>
-              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
-          <filter id="shadow">
-            <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
-          </filter>
         </defs>
-        
-        <rect width="100%" height="100%" rx="16" fill="url(#bgGrad)"/>
-        
-        <rect x="0" y="0" width="100%" height="${headerHeight}" rx="16" fill="url(#headerGrad)" opacity="0.15"/>
-        
-        <text x="${width / 2}" y="36" font-size="24" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">
-          ${org}
-        </text>
-        <text x="${width / 2}" y="58" font-size="13" font-weight="500" fill="#94a3b8" text-anchor="middle" letter-spacing="1">
-          TOP CONTRIBUTORS
-        </text>
-      `;
 
-    leaderboard.forEach((u, i) => {
-      const y = headerHeight + padding + i * rowHeight;
-      const barWidth = ((u.commits / maxCommits) * (width - 180));
-      const isTop3 = i < 3;
-      
-      const rowBg = isTop3 ? 'rgba(59, 130, 246, 0.1)' : 'rgba(30, 41, 59, 0.4)';
-      const barColor = isTop3 
-        ? (i === 0 ? 'rgba(251, 191, 36, 0.3)' : i === 1 ? 'rgba(168, 85, 247, 0.3)' : 'rgba(59, 130, 246, 0.3)')
-        : 'rgba(71, 85, 105, 0.3)';
-      const barStroke = isTop3
-        ? (i === 0 ? 'rgb(251, 191, 36)' : i === 1 ? 'rgb(168, 85, 247)' : 'rgb(59, 130, 246)')
-        : 'rgb(100, 116, 139)';
-      const textColor = isTop3 ? (i === 0 ? '#fbbf24' : i === 1 ? '#a855f7' : '#3b82f6') : '#64748b';
-      const xOffset = isTop3 ? 48 : 42;
+        <rect width="100%" height="100%" rx="24" fill="url(#bgGrad)"/>
+        <rect width="100%" height="100%" rx="24" fill="url(#mesh)"/>
 
-      svgContent += `
-        <g filter="url(#shadow)">
-          <rect x="${padding}" y="${y}" width="${width - padding * 2}" height="44" rx="8" fill="${rowBg}" stroke="rgba(148, 163, 184, 0.1)" stroke-width="1"/>
+        <g opacity="0.25" filter="url(#softGlow)">
+          <circle cx="${width - 80}" cy="${headerHeight - 40}" r="80" fill="#3b82f6"/>
+          <circle cx="${padding * 2}" cy="${height - padding * 2}" r="70" fill="#a855f7"/>
         </g>
-        
-        <rect x="${padding + 4}" y="${y + 4}" width="${barWidth}" height="36" rx="6" fill="${barColor}" stroke="${barStroke}" stroke-width="1.5" opacity="0.8"/>
-        
-        <text x="${padding + 16}" y="${y + 27}" font-size="16" font-weight="600" fill="#ffffff">
-          ${isTop3 ? medals[i] : '#' + (i + 1)}
-        </text>
-        
-        <text x="${padding + xOffset}" y="${y + 27}" font-size="14" font-weight="500" fill="#e2e8f0">
-          ${u.username}
-        </text>
-        
-        <text x="${width - padding - 16}" y="${y + 27}" font-size="14" font-weight="700" fill="${textColor}" text-anchor="end">
-          ${u.commits.toLocaleString()}
-        </text>
+
+        <g transform="translate(${padding}, ${padding})">
+          <rect width="${width - padding * 2}" height="${headerHeight - padding}" rx="18" fill="url(#headerGrad)" opacity="0.16" />
+          <text x="12" y="36" font-size="13" fill="#a5b4fc" letter-spacing="2">LEADERBOARD</text>
+          <text x="12" y="68" font-size="30" font-weight="700" fill="#f8fafc">${sanitize(org)}</text>
+          <text x="12" y="92" font-size="14" fill="#cbd5f5">Top contributors across the organization</text>
+        </g>
+    `;
+
+    const cardWidth = (width - padding * 2 - 24) / stats.length;
+    const statsY = headerHeight;
+
+    stats.forEach((stat, index) => {
+      const cardX = padding + index * (cardWidth + 12);
+      svgContent += `
+        <g transform="translate(${cardX}, ${statsY})" filter="url(#shadow)">
+          <rect width="${cardWidth}" height="72" rx="14" fill="rgba(15,23,42,0.8)" stroke="rgba(148,163,184,0.2)" />
+          <text x="16" y="32" font-size="12" fill="#94a3b8" letter-spacing="1">${stat.label.toUpperCase()}</text>
+          <text x="16" y="56" font-size="22" font-weight="700" fill="#e2e8f0">${stat.value}</text>
+        </g>
       `;
     });
 
-    svgContent += `</svg>`;
+    const rowsStartY = headerHeight + statsSectionHeight;
+
+    leaderboard.forEach((user, index) => {
+      const y = rowsStartY + index * rowHeight;
+      const barWidth = ((user.commits / maxCommits) * (width - padding * 2 - 140));
+      const accent =
+        medals[index]?.accent ||
+        ["#60a5fa", "#f472b6", "#34d399"][index - medals.length] ||
+        "#f472b6";
+      const medalIcon = medals[index]?.icon || `#${index + 1}`;
+      const contributionShare = totalCommits
+        ? (user.commits / totalCommits) * 100
+        : 0;
+
+      const avatarClipId = `avatarClip${index}`;
+
+      svgContent += `
+        <defs>
+          <clipPath id="${avatarClipId}">
+            <circle cx="${padding + 52}" cy="${y + 38}" r="26" />
+          </clipPath>
+        </defs>
+
+        <g transform="translate(0, ${y})" filter="url(#shadow)">
+          <rect x="${padding}" y="6" width="${width - padding * 2}" height="${rowHeight - 14}" rx="18" fill="rgba(15,23,42,0.75)" stroke="rgba(148,163,184,0.15)" />
+          <rect x="${padding + 116}" y="${rowHeight - 34}" width="${barWidth}" height="10" rx="5" fill="url(#barGrad)" opacity="0.8" />
+
+          <circle cx="${padding + 52}" cy="${rowHeight / 2}" r="32" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.3)" stroke-width="1.5" />
+          <image href="${user.avatar}" x="${padding + 26}" y="${rowHeight / 2 - 26}" width="52" height="52" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice" />
+
+          <g transform="translate(${padding + 92}, ${rowHeight / 2 - 2})">
+            <text font-size="14" font-weight="600" fill="${accent}">
+              ${medalIcon}
+            </text>
+          </g>
+
+          <text x="${padding + 120}" y="${rowHeight / 2}" font-size="16" font-weight="600" fill="#f8fafc">
+            ${sanitize(user.username)}
+          </text>
+
+          <text x="${padding + 120}" y="${rowHeight / 2 + 22}" font-size="12" fill="#94a3b8">
+            ${user.commits.toLocaleString()} commits
+          </text>
+
+          <text x="${width - padding - 12}" y="${rowHeight / 2 + 6}" font-size="18" font-weight="700" fill="${accent}" text-anchor="end">
+            ${contributionShare.toFixed(1)}%
+          </text>
+          <text x="${width - padding - 12}" y="${rowHeight / 2 + 26}" font-size="12" fill="#94a3b8" text-anchor="end">
+            of total activity
+          </text>
+        </g>
+      `;
+    });
+
+    svgContent += `
+        <text x="${padding}" y="${height - 20}" font-size="12" fill="#94a3b8">
+          Updated ${lastUpdated} • Powered by GitHub REST API
+        </text>
+      </svg>
+    `;
 
     res.setHeader("Content-Type", "image/svg+xml");
-    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.setHeader("Cache-Control", "public, max-age=1800");
     res.send(svgContent);
 
   } catch (err) {
