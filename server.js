@@ -77,6 +77,7 @@ app.get("/leaderboard-badge", async (req, res) => {
     const repoCount = repos.length;
     const width = 660;
     const rowHeight = 120;
+    const contributorCardPaddingY = 16;
     const headerHeight = 152;
     const statsCardHeight = 112;
     const statsColumns = 2;
@@ -226,7 +227,7 @@ app.get("/leaderboard-badge", async (req, res) => {
         </defs>
 
         <g transform="translate(0, ${rowTop})" filter="url(#shadow)">
-          <rect x="${padding}" y="8" width="${rowCardWidth}" height="${rowHeight - 22}" rx="28" fill="rgba(7,13,26,0.95)" stroke="rgba(148,163,184,0.16)"/>
+          <rect x="${padding}" y="${contributorCardPaddingY}" width="${rowCardWidth}" height="${rowHeight - contributorCardPaddingY * 2}" rx="28" fill="rgba(7,13,26,0.95)" stroke="rgba(148,163,184,0.16)"/>
 
           <circle cx="${avatarCenterX}" cy="${rowHeight / 2 - 4}" r="${avatarRadius + 6}" fill="rgba(15,23,42,0.9)" stroke="${accent}" stroke-width="1.4"/>
           <image href="${user.avatar}" x="${avatarCenterX - avatarRadius}" y="${rowHeight / 2 - avatarRadius}" width="${avatarRadius * 2}" height="${avatarRadius * 2}" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice"/>
