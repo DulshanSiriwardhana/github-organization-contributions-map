@@ -186,52 +186,69 @@ app.get("/leaderboard-badge", async (req, res) => {
     });
 
     leaderboard.forEach((user, index) => {
-      const y = rowsStartY + index * rowHeight;
+      const rowTop = rowsStartY + index * rowHeight;
       const rowCardWidth = width - padding * 2;
-      const progressMaxWidth = rowCardWidth - 220;
+      const percentCardWidth = 160;
+      const textStartX = padding + 118;
+      const progressX = textStartX;
+      const progressMaxWidth = Math.max(
+        140,
+        rowCardWidth - (textStartX - padding) - percentCardWidth - 48
+      );
       const barWidth = Math.max(
-        24,
+        20,
         (user.commits / maxCommits) * progressMaxWidth
       );
       const accent = medals[index]?.accent || accentCycle[index % accentCycle.length];
+      const accentTrail = accentCycle[(index + 1) % accentCycle.length];
       const medalIcon = medals[index]?.icon || `#${index + 1}`;
       const contributionShare = totalCommits ? (user.commits / totalCommits) * 100 : 0;
       const usernameDisplay = formatDisplayText(user.username, 22);
-      const progressX = padding + 148;
-      const rowTop = y;
-
+      const progressGradId = `progressGrad${index}`;
       const avatarClipId = `avatarClip${index}`;
+      const avatarRadius = 30;
+      const avatarCenterX = padding + 58;
+      const medalLabel =
+        index === 0 ? "Most active" : index === 1 ? "Runner up" : index === 2 ? "Key contributor" : "Top contributor";
+      const percentCardX = width - padding - percentCardWidth - 12;
+      const percentCardY = rowHeight / 2 - 26;
 
       svgContent += `
         <defs>
           <clipPath id="${avatarClipId}">
-            <circle cx="${padding + 58}" cy="${rowTop + rowHeight / 2 - 4}" r="28" />
+            <circle cx="${avatarCenterX}" cy="${rowHeight / 2}" r="${avatarRadius}" />
           </clipPath>
+          <linearGradient id="${progressGradId}" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="${accent}" stop-opacity="0.95"/>
+            <stop offset="100%" stop-color="${accentTrail}" stop-opacity="0.75"/>
+          </linearGradient>
         </defs>
 
         <g transform="translate(0, ${rowTop})" filter="url(#shadow)">
-          <rect x="${padding}" y="6" width="${rowCardWidth}" height="${rowHeight - 14}" rx="24" fill="rgba(8,15,32,0.9)" stroke="rgba(148,163,184,0.18)"/>
+          <rect x="${padding}" y="6" width="${rowCardWidth}" height="${rowHeight - 14}" rx="24" fill="rgba(7,13,26,0.95)" stroke="rgba(148,163,184,0.18)"/>
 
-          <circle cx="${padding + 58}" cy="${rowHeight / 2}" r="34" fill="rgba(15,23,42,0.9)" stroke="${accent}" stroke-width="1.5"/>
-          <image href="${user.avatar}" x="${padding + 30}" y="${rowHeight / 2 - 30}" width="56" height="56" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice"/>
+          <circle cx="${avatarCenterX}" cy="${rowHeight / 2}" r="${avatarRadius + 6}" fill="rgba(15,23,42,0.9)" stroke="${accent}" stroke-width="1.5"/>
+          <image href="${user.avatar}" x="${avatarCenterX - avatarRadius}" y="${rowHeight / 2 - avatarRadius}" width="${avatarRadius * 2}" height="${avatarRadius * 2}" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice"/>
 
-          <text x="${padding + 108}" y="${rowHeight / 2 - 4}" font-size="16" font-weight="600" fill="#f8fafc">
+          <text x="${textStartX}" y="${rowHeight / 2 - 6}" font-size="17" font-weight="600" fill="#f8fafc">
             ${usernameDisplay}
           </text>
-          <text x="${padding + 108}" y="${rowHeight / 2 + 20}" font-size="13" fill="#94a3b8">
-            ${user.commits.toLocaleString()} commits · ${medalIcon}
+          <text x="${textStartX}" y="${rowHeight / 2 + 20}" font-size="13" fill="#cbd5f5">
+            ${user.commits.toLocaleString()} commits · ${medalLabel}
           </text>
 
-          <rect x="${progressX}" y="${rowHeight - 30}" width="${progressMaxWidth}" height="12" rx="6" fill="rgba(148,163,184,0.25)"/>
-          <rect x="${progressX}" y="${rowHeight - 30}" width="${barWidth}" height="12" rx="6" fill="${accent}" opacity="0.9"/>
+          <rect x="${progressX}" y="${rowHeight - 32}" width="${progressMaxWidth}" height="12" rx="6" fill="rgba(148,163,184,0.25)"/>
+          <rect x="${progressX}" y="${rowHeight - 32}" width="${barWidth}" height="12" rx="6" fill="url(#${progressGradId})" />
 
-          <rect x="${width - padding - 150}" y="${rowHeight / 2 - 22}" width="120" height="38" rx="19" fill="rgba(15,23,42,0.8)" stroke="${accent}" stroke-width="1"/>
-          <text x="${width - padding - 90}" y="${rowHeight / 2 - 2}" font-size="14" font-weight="700" fill="${accent}" text-anchor="middle">
-            ${contributionShare.toFixed(1)}%
-          </text>
-          <text x="${width - padding - 90}" y="${rowHeight / 2 + 14}" font-size="11" fill="#94a3b8" text-anchor="middle">
-            of activity
-          </text>
+          <g transform="translate(${percentCardX}, ${percentCardY})">
+            <rect width="${percentCardWidth}" height="52" rx="26" fill="rgba(10,20,38,0.92)" stroke="${accent}" stroke-width="1"/>
+            <text x="${percentCardWidth / 2}" y="28" font-size="18" font-weight="700" fill="${accent}" text-anchor="middle">
+              ${contributionShare.toFixed(1)}%
+            </text>
+            <text x="${percentCardWidth / 2}" y="42" font-size="12" fill="#94a3b8" text-anchor="middle">
+              ${medalIcon} · ${medalLabel}
+            </text>
+          </g>
         </g>
       `;
     });
