@@ -75,25 +75,25 @@ app.get("/leaderboard-badge", async (req, res) => {
 
     const totalContributors = contributorsList.length;
     const repoCount = repos.length;
-    const width = 560;
-    const rowHeight = 84;
-    const headerHeight = 110;
-    const statsCardHeight = 88;
-    const statsSectionHeight = statsCardHeight + 10;
-    const padding = 32;
-    const footerHeight = 40;
-    const statsGap = 20;
-    const rowsGap = 32;
-    const statsY = padding + headerHeight + statsGap;
-    const rowsStartY = statsY + statsSectionHeight + rowsGap;
-    const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding;
+    const width = 620;
+    const rowHeight = 96;
+    const headerHeight = 126;
+    const statsCardHeight = 90;
+    const statsColumns = 2;
+    const statsCardGap = 16;
+    const padding = 36;
+    const footerHeight = 44;
+    const statsGap = 24;
+    const rowsGap = 40;
 
     const maxCommits = leaderboard[0]?.commits || 1;
     const medals = [
-      { icon: "🥇", accent: "#fbbf24" },
-      { icon: "🥈", accent: "#cbd5f5" },
-      { icon: "🥉", accent: "#f97316" }
+      { icon: "🥇", accent: "#f97316" },
+      { icon: "🥈", accent: "#38bdf8" },
+      { icon: "🥉", accent: "#22d3ee" }
     ];
+    const accentCycle = ["#0ea5e9", "#f43f5e", "#14b8a6", "#c084fc", "#f97316"];
+    const topShare = totalCommits ? ((leaderboard[0]?.commits || 0) / totalCommits) * 100 : 0;
     const lastUpdated = new Date().toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -103,29 +103,41 @@ app.get("/leaderboard-badge", async (req, res) => {
     const stats = [
       { label: "Repos scanned", value: repoCount.toLocaleString() },
       { label: "Unique contributors", value: totalContributors.toLocaleString() },
-      { label: "Commits analyzed", value: totalCommits.toLocaleString() }
+      { label: "Commits analyzed", value: totalCommits.toLocaleString() },
+      { label: "Top contributor share", value: `${topShare.toFixed(1)}%` }
     ];
+
+    const statsRows = Math.ceil(stats.length / statsColumns);
+    const statsSectionHeight =
+      statsRows * statsCardHeight + Math.max(0, statsRows - 1) * statsCardGap;
+    const statsY = padding + headerHeight + statsGap;
+    const rowsStartY = statsY + statsSectionHeight + rowsGap;
+    const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding;
     const safeOrg = formatDisplayText(org, 32);
 
     let svgContent = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Top contributors for ${safeOrg}" style="font-family:'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Top contributors for ${safeOrg}" style="font-family:'Inter', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <defs>
           <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#020617"/>
-            <stop offset="50%" stop-color="#0f172a"/>
-            <stop offset="100%" stop-color="#1e1b4b"/>
+            <stop offset="0%" stop-color="#010409"/>
+            <stop offset="40%" stop-color="#04172a"/>
+            <stop offset="100%" stop-color="#07182f"/>
           </linearGradient>
           <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#3b82f6"/>
-            <stop offset="100%" stop-color="#8b5cf6"/>
+            <stop offset="0%" stop-color="#0ea5e9"/>
+            <stop offset="100%" stop-color="#f43f5e"/>
           </linearGradient>
           <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#3b82f6"/>
-            <stop offset="100%" stop-color="#22d3ee"/>
+            <stop offset="0%" stop-color="#0ea5e9"/>
+            <stop offset="100%" stop-color="#f43f5e"/>
           </linearGradient>
-          <pattern id="mesh" width="80" height="80" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
-            <rect width="80" height="80" fill="rgba(255,255,255,0.02)"/>
-            <path d="M 0 80 L 80 0" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+          <radialGradient id="orbGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(244,63,94,0.5)"/>
+            <stop offset="100%" stop-color="rgba(14,165,233,0)"/>
+          </radialGradient>
+          <pattern id="mesh" width="72" height="72" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+            <rect width="72" height="72" fill="rgba(255,255,255,0.01)"/>
+            <path d="M 0 72 L 72 0" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
           </pattern>
           <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25"/>
@@ -142,91 +154,91 @@ app.get("/leaderboard-badge", async (req, res) => {
         <rect width="100%" height="100%" rx="24" fill="url(#bgGrad)"/>
         <rect width="100%" height="100%" rx="24" fill="url(#mesh)"/>
 
-        <g opacity="0.25" filter="url(#softGlow)">
-          <circle cx="${width - 80}" cy="${headerHeight - 40}" r="80" fill="#3b82f6"/>
-          <circle cx="${padding * 2}" cy="${height - padding * 2}" r="70" fill="#a855f7"/>
+        <g opacity="0.55" filter="url(#softGlow)">
+          <circle cx="${width - 120}" cy="${padding + 30}" r="110" fill="url(#orbGrad)"/>
+          <circle cx="${padding * 1.2}" cy="${height - padding * 1.1}" r="90" fill="url(#orbGrad)"/>
         </g>
 
         <g transform="translate(${padding}, ${padding})">
-          <rect width="${width - padding * 2}" height="${headerHeight - 16}" rx="18" fill="url(#headerGrad)" opacity="0.18" />
-          <text x="18" y="34" font-size="13" fill="#a5b4fc" letter-spacing="2">LEADERBOARD</text>
-          <text x="18" y="68" font-size="30" font-weight="700" fill="#f8fafc">${safeOrg}</text>
-          <text x="18" y="94" font-size="14" fill="#cbd5f5">Top contributors across the organization</text>
+          <rect width="${width - padding * 2}" height="${headerHeight - 22}" rx="22" fill="url(#headerGrad)" opacity="0.2" stroke="rgba(255,255,255,0.15)"/>
+          <text x="22" y="36" font-size="12" fill="#a5f3fc" letter-spacing="5">ORGANIZATION</text>
+          <text x="22" y="74" font-size="34" font-weight="700" fill="#f8fafc">${safeOrg}</text>
+          <text x="22" y="104" font-size="15" fill="#dbeafe">Top contributors across the organization</text>
+          <rect x="${width - padding * 2 - 140}" y="24" width="120" height="36" rx="18" fill="rgba(15,23,42,0.6)" stroke="rgba(255,255,255,0.25)"/>
+          <text x="${width - padding * 2 - 80}" y="48" font-size="13" font-weight="600" fill="#f1f5f9" text-anchor="middle">Top 5 Badge</text>
         </g>
     `;
 
-    const cardWidth = (width - padding * 2 - 24) / stats.length;
+    const cardWidth = (width - padding * 2 - (statsColumns - 1) * statsCardGap) / statsColumns;
 
     stats.forEach((stat, index) => {
-      const cardX = padding + index * (cardWidth + 12);
+      const col = index % statsColumns;
+      const row = Math.floor(index / statsColumns);
+      const cardX = padding + col * (cardWidth + statsCardGap);
+      const cardY = statsY + row * (statsCardHeight + statsCardGap);
       svgContent += `
-        <g transform="translate(${cardX}, ${statsY})" filter="url(#shadow)">
-          <rect width="${cardWidth}" height="${statsCardHeight}" rx="16" fill="rgba(15,23,42,0.82)" stroke="rgba(148,163,184,0.25)" />
-          <text x="18" y="34" font-size="12" fill="#94a3b8" letter-spacing="1">${stat.label.toUpperCase()}</text>
-          <text x="18" y="64" font-size="24" font-weight="700" fill="#e2e8f0">${stat.value}</text>
+        <g transform="translate(${cardX}, ${cardY})" filter="url(#shadow)">
+          <rect width="${cardWidth}" height="${statsCardHeight}" rx="18" fill="rgba(15,23,42,0.88)" stroke="rgba(148,163,184,0.2)"/>
+          <text x="20" y="34" font-size="12" fill="#94a3b8" letter-spacing="2">${stat.label.toUpperCase()}</text>
+          <text x="20" y="66" font-size="26" font-weight="700" fill="#f8fafc">${stat.value}</text>
         </g>
       `;
     });
 
     leaderboard.forEach((user, index) => {
       const y = rowsStartY + index * rowHeight;
+      const rowCardWidth = width - padding * 2;
+      const progressMaxWidth = rowCardWidth - 220;
       const barWidth = Math.max(
-        28,
-        (user.commits / maxCommits) * (width - padding * 2 - 180)
+        24,
+        (user.commits / maxCommits) * progressMaxWidth
       );
-      const accent =
-        medals[index]?.accent ||
-        ["#60a5fa", "#f472b6", "#34d399"][index - medals.length] ||
-        "#f472b6";
+      const accent = medals[index]?.accent || accentCycle[index % accentCycle.length];
       const medalIcon = medals[index]?.icon || `#${index + 1}`;
-      const contributionShare = totalCommits
-        ? (user.commits / totalCommits) * 100
-        : 0;
-      const usernameDisplay = formatDisplayText(user.username, 20);
+      const contributionShare = totalCommits ? (user.commits / totalCommits) * 100 : 0;
+      const usernameDisplay = formatDisplayText(user.username, 22);
+      const progressX = padding + 148;
+      const rowTop = y;
 
       const avatarClipId = `avatarClip${index}`;
 
       svgContent += `
         <defs>
           <clipPath id="${avatarClipId}">
-            <circle cx="${padding + 60}" cy="${y + rowHeight / 2}" r="26" />
+            <circle cx="${padding + 58}" cy="${rowTop + rowHeight / 2 - 4}" r="28" />
           </clipPath>
         </defs>
 
-        <g transform="translate(0, ${y})" filter="url(#shadow)">
-          <rect x="${padding}" y="8" width="${width - padding * 2}" height="${rowHeight - 18}" rx="20" fill="rgba(15,23,42,0.8)" stroke="rgba(148,163,184,0.18)" />
-          <rect x="${padding + 138}" y="${rowHeight - 34}" width="${barWidth}" height="10" rx="5" fill="url(#barGrad)" opacity="0.85" />
+        <g transform="translate(0, ${rowTop})" filter="url(#shadow)">
+          <rect x="${padding}" y="6" width="${rowCardWidth}" height="${rowHeight - 14}" rx="24" fill="rgba(8,15,32,0.9)" stroke="rgba(148,163,184,0.18)"/>
 
-          <circle cx="${padding + 60}" cy="${rowHeight / 2}" r="32" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.3)" stroke-width="1.5" />
-          <image href="${user.avatar}" x="${padding + 34}" y="${rowHeight / 2 - 26}" width="52" height="52" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice" />
+          <circle cx="${padding + 58}" cy="${rowHeight / 2}" r="34" fill="rgba(15,23,42,0.9)" stroke="${accent}" stroke-width="1.5"/>
+          <image href="${user.avatar}" x="${padding + 30}" y="${rowHeight / 2 - 30}" width="56" height="56" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice"/>
 
-          <g transform="translate(${padding + 104}, ${rowHeight / 2 - 2})">
-            <text font-size="14" font-weight="600" fill="${accent}">
-              ${medalIcon}
-            </text>
-          </g>
-
-          <text x="${padding + 140}" y="${rowHeight / 2 - 2}" font-size="16" font-weight="600" fill="#f8fafc">
+          <text x="${padding + 108}" y="${rowHeight / 2 - 4}" font-size="16" font-weight="600" fill="#f8fafc">
             ${usernameDisplay}
           </text>
-
-          <text x="${padding + 140}" y="${rowHeight / 2 + 20}" font-size="13" fill="#94a3b8">
-            ${user.commits.toLocaleString()} commits
+          <text x="${padding + 108}" y="${rowHeight / 2 + 20}" font-size="13" fill="#94a3b8">
+            ${user.commits.toLocaleString()} commits · ${medalIcon}
           </text>
 
-          <text x="${width - padding - 12}" y="${rowHeight / 2 + 6}" font-size="18" font-weight="700" fill="${accent}" text-anchor="end">
+          <rect x="${progressX}" y="${rowHeight - 30}" width="${progressMaxWidth}" height="12" rx="6" fill="rgba(148,163,184,0.25)"/>
+          <rect x="${progressX}" y="${rowHeight - 30}" width="${barWidth}" height="12" rx="6" fill="${accent}" opacity="0.9"/>
+
+          <rect x="${width - padding - 150}" y="${rowHeight / 2 - 22}" width="120" height="38" rx="19" fill="rgba(15,23,42,0.8)" stroke="${accent}" stroke-width="1"/>
+          <text x="${width - padding - 90}" y="${rowHeight / 2 - 2}" font-size="14" font-weight="700" fill="${accent}" text-anchor="middle">
             ${contributionShare.toFixed(1)}%
           </text>
-          <text x="${width - padding - 12}" y="${rowHeight / 2 + 26}" font-size="12" fill="#94a3b8" text-anchor="end">
-            of total activity
+          <text x="${width - padding - 90}" y="${rowHeight / 2 + 14}" font-size="11" fill="#94a3b8" text-anchor="middle">
+            of activity
           </text>
         </g>
       `;
     });
 
     svgContent += `
-        <text x="${padding}" y="${height - 20}" font-size="12" fill="#94a3b8">
-          Updated ${lastUpdated} • Powered by GitHub REST API
+        <text x="${padding}" y="${height - 18}" font-size="12" fill="#94a3b8">
+          Updated ${lastUpdated} · Powered by GitHub REST API
         </text>
       </svg>
     `;
