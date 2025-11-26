@@ -77,7 +77,8 @@ app.get("/leaderboard-badge", async (req, res) => {
     const repoCount = repos.length;
     const width = 660;
     const rowHeight = 120;
-    const contributorCardPaddingY = 16;
+    const contributorCardPaddingY = 24;
+    const rowShadowBleed = 40;
     const headerHeight = 152;
     const statsCardHeight = 112;
     const statsColumns = 2;
@@ -113,7 +114,8 @@ app.get("/leaderboard-badge", async (req, res) => {
       statsRows * statsCardHeight + Math.max(0, statsRows - 1) * statsCardGap;
     const statsY = padding + headerHeight + statsGap;
     const rowsStartY = statsY + statsSectionHeight + rowsGap;
-    const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding + 40;
+    const height =
+      rowsStartY + leaderboard.length * rowHeight + footerHeight + padding + rowShadowBleed;
     const safeOrg = formatDisplayText(org, 32);
 
     let svgContent = `
@@ -176,7 +178,7 @@ app.get("/leaderboard-badge", async (req, res) => {
       const col = index % statsColumns;
       const row = Math.floor(index / statsColumns);
       const cardX = padding + col * (cardWidth + statsCardGap);
-      const cardY = 60+ statsY + row * (statsCardHeight + statsCardGap);
+      const cardY = statsY + row * (statsCardHeight + statsCardGap);
       svgContent += `
         <g transform="translate(${cardX}, ${cardY})" filter="url(#shadow)">
           <rect width="${cardWidth}" height="${statsCardHeight}" rx="26" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.2)"/>
@@ -192,6 +194,8 @@ app.get("/leaderboard-badge", async (req, res) => {
       const percentCardWidth = 190;
       const textStartX = padding + 140;
       const progressX = textStartX;
+      const progressBarHeight = 14;
+      const progressBarBottomMargin = 12;
       const progressMaxWidth = Math.max(
         140,
         rowCardWidth - (textStartX - padding) - percentCardWidth - 48
@@ -213,7 +217,8 @@ app.get("/leaderboard-badge", async (req, res) => {
         index === 0 ? "Most active" : index === 1 ? "Runner up" : index === 2 ? "Key contributor" : "Top contributor";
       const percentCardX = width - padding - percentCardWidth - 18;
       const percentCardY = rowHeight / 2 - 30;
-      const progressY = rowHeight - 24;
+      const progressY =
+        rowHeight - contributorCardPaddingY - progressBarHeight - progressBarBottomMargin;
 
       svgContent += `
         <defs>
@@ -239,8 +244,8 @@ app.get("/leaderboard-badge", async (req, res) => {
             ${user.commits.toLocaleString()} commits · ${medalLabel}
           </text>
 
-          <rect x="${progressX}" y="${progressY}" width="${progressMaxWidth}" height="18" rx="9" fill="rgba(148,163,184,0.16)"/>
-          <rect x="${progressX}" y="${progressY}" width="${barWidth}" height="18" rx="9" fill="url(#${progressGradId})" />
+          <rect x="${progressX}" y="${progressY}" width="${progressMaxWidth}" height="${progressBarHeight}" rx="${progressBarHeight / 2}" fill="rgba(148,163,184,0.16)"/>
+          <rect x="${progressX}" y="${progressY}" width="${barWidth}" height="${progressBarHeight}" rx="${progressBarHeight / 2}" fill="url(#${progressGradId})" />
 
           <g transform="translate(${percentCardX}, ${percentCardY})">
             <rect width="${percentCardWidth}" height="64" rx="32" fill="rgba(10,20,38,0.92)" stroke="${accent}" stroke-width="1"/>
