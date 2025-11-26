@@ -76,7 +76,7 @@ app.get("/leaderboard-badge", async (req, res) => {
     const totalContributors = contributorsList.length;
     const repoCount = repos.length;
     const width = 660;
-    const rowHeight = 120;
+    const rowHeight = 200;
     const contributorCardPaddingY = 24;
     const rowShadowBleed = 40;
     const headerHeight = 152;
@@ -194,7 +194,7 @@ app.get("/leaderboard-badge", async (req, res) => {
       const percentCardWidth = 190;
       const textStartX = padding + 140;
       const progressX = textStartX;
-      const progressBarHeight = 14;
+      const progressBarHeight = 6;
       const progressBarBottomMargin = 12;
       const progressMaxWidth = Math.max(
         140,
