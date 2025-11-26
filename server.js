@@ -212,6 +212,7 @@ app.get("/leaderboard-badge", async (req, res) => {
         index === 0 ? "Most active" : index === 1 ? "Runner up" : index === 2 ? "Key contributor" : "Top contributor";
       const percentCardX = width - padding - percentCardWidth - 18;
       const percentCardY = rowHeight / 2 - 26;
+      const progressY = rowHeight - 36;
 
       svgContent += `
         <defs>
@@ -233,12 +234,12 @@ app.get("/leaderboard-badge", async (req, res) => {
           <text x="${textStartX}" y="${rowHeight / 2 - 10}" font-size="19" font-weight="600" fill="#f8fafc">
             ${usernameDisplay}
           </text>
-          <text x="${textStartX}" y="${rowHeight / 2 + 26}" font-size="13" fill="#e2e8f0">
+          <text x="${textStartX}" y="${rowHeight / 2 + 28}" font-size="13" font-weight="500" fill="#f8fafc">
             ${user.commits.toLocaleString()} commits · ${medalLabel}
           </text>
 
-          <rect x="${progressX}" y="${rowHeight - 54}" width="${progressMaxWidth}" height="18" rx="9" fill="rgba(148,163,184,0.18)"/>
-          <rect x="${progressX}" y="${rowHeight - 54}" width="${barWidth}" height="18" rx="9" fill="url(#${progressGradId})" />
+          <rect x="${progressX}" y="${progressY}" width="${progressMaxWidth}" height="18" rx="9" fill="rgba(148,163,184,0.18)"/>
+          <rect x="${progressX}" y="${progressY}" width="${barWidth}" height="18" rx="9" fill="url(#${progressGradId})" />
 
           <g transform="translate(${percentCardX}, ${percentCardY})">
             <rect width="${percentCardWidth}" height="64" rx="32" fill="rgba(10,20,38,0.92)" stroke="${accent}" stroke-width="1"/>
