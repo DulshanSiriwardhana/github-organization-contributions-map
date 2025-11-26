@@ -76,8 +76,11 @@ app.get("/leaderboard-badge", async (req, res) => {
     const statsSectionHeight = 88;
     const padding = 28;
     const footerHeight = 36;
-    const height =
-      headerHeight + statsSectionHeight + leaderboard.length * rowHeight + padding * 2 + footerHeight;
+    const statsGap = 20;
+    const rowsGap = 30;
+    const statsY = padding + headerHeight + statsGap;
+    const rowsStartY = statsY + statsSectionHeight + rowsGap;
+    const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding;
 
     const maxCommits = leaderboard[0]?.commits || 1;
     const medals = [
@@ -148,7 +151,6 @@ app.get("/leaderboard-badge", async (req, res) => {
     `;
 
     const cardWidth = (width - padding * 2 - 24) / stats.length;
-    const statsY = headerHeight;
 
     stats.forEach((stat, index) => {
       const cardX = padding + index * (cardWidth + 12);
@@ -160,8 +162,6 @@ app.get("/leaderboard-badge", async (req, res) => {
         </g>
       `;
     });
-
-    const rowsStartY = headerHeight + statsSectionHeight;
 
     leaderboard.forEach((user, index) => {
       const y = rowsStartY + index * rowHeight;
