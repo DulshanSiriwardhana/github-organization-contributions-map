@@ -16,6 +16,11 @@ const sanitize = (value = "") =>
     return entities[char] || char;
   });
 
+const formatDisplayText = (value = "", maxLength = 32) => {
+  const safe = sanitize(value);
+  return safe.length > maxLength ? `${safe.slice(0, maxLength - 1)}…` : safe;
+};
+
 app.get("/leaderboard-badge", async (req, res) => {
   const org = req.query.org;
   if (!org) return res.status(400).send("Missing org parameter");
@@ -71,13 +76,14 @@ app.get("/leaderboard-badge", async (req, res) => {
     const totalContributors = contributorsList.length;
     const repoCount = repos.length;
     const width = 560;
-    const rowHeight = 76;
+    const rowHeight = 84;
     const headerHeight = 110;
-    const statsSectionHeight = 88;
-    const padding = 28;
-    const footerHeight = 36;
+    const statsCardHeight = 88;
+    const statsSectionHeight = statsCardHeight + 10;
+    const padding = 32;
+    const footerHeight = 40;
     const statsGap = 20;
-    const rowsGap = 30;
+    const rowsGap = 32;
     const statsY = padding + headerHeight + statsGap;
     const rowsStartY = statsY + statsSectionHeight + rowsGap;
     const height = rowsStartY + leaderboard.length * rowHeight + footerHeight + padding;
@@ -99,11 +105,10 @@ app.get("/leaderboard-badge", async (req, res) => {
       { label: "Unique contributors", value: totalContributors.toLocaleString() },
       { label: "Commits analyzed", value: totalCommits.toLocaleString() }
     ];
+    const safeOrg = formatDisplayText(org, 32);
 
     let svgContent = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Top contributors for ${sanitize(
-        org
-      )}" style="font-family:'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Top contributors for ${safeOrg}" style="font-family:'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <defs>
           <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#020617"/>
@@ -143,10 +148,10 @@ app.get("/leaderboard-badge", async (req, res) => {
         </g>
 
         <g transform="translate(${padding}, ${padding})">
-          <rect width="${width - padding * 2}" height="${headerHeight - padding}" rx="18" fill="url(#headerGrad)" opacity="0.16" />
-          <text x="12" y="36" font-size="13" fill="#a5b4fc" letter-spacing="2">LEADERBOARD</text>
-          <text x="12" y="68" font-size="30" font-weight="700" fill="#f8fafc">${sanitize(org)}</text>
-          <text x="12" y="92" font-size="14" fill="#cbd5f5">Top contributors across the organization</text>
+          <rect width="${width - padding * 2}" height="${headerHeight - 16}" rx="18" fill="url(#headerGrad)" opacity="0.18" />
+          <text x="18" y="34" font-size="13" fill="#a5b4fc" letter-spacing="2">LEADERBOARD</text>
+          <text x="18" y="68" font-size="30" font-weight="700" fill="#f8fafc">${safeOrg}</text>
+          <text x="18" y="94" font-size="14" fill="#cbd5f5">Top contributors across the organization</text>
         </g>
     `;
 
@@ -156,16 +161,19 @@ app.get("/leaderboard-badge", async (req, res) => {
       const cardX = padding + index * (cardWidth + 12);
       svgContent += `
         <g transform="translate(${cardX}, ${statsY})" filter="url(#shadow)">
-          <rect width="${cardWidth}" height="72" rx="14" fill="rgba(15,23,42,0.8)" stroke="rgba(148,163,184,0.2)" />
-          <text x="16" y="32" font-size="12" fill="#94a3b8" letter-spacing="1">${stat.label.toUpperCase()}</text>
-          <text x="16" y="56" font-size="22" font-weight="700" fill="#e2e8f0">${stat.value}</text>
+          <rect width="${cardWidth}" height="${statsCardHeight}" rx="16" fill="rgba(15,23,42,0.82)" stroke="rgba(148,163,184,0.25)" />
+          <text x="18" y="34" font-size="12" fill="#94a3b8" letter-spacing="1">${stat.label.toUpperCase()}</text>
+          <text x="18" y="64" font-size="24" font-weight="700" fill="#e2e8f0">${stat.value}</text>
         </g>
       `;
     });
 
     leaderboard.forEach((user, index) => {
       const y = rowsStartY + index * rowHeight;
-      const barWidth = ((user.commits / maxCommits) * (width - padding * 2 - 140));
+      const barWidth = Math.max(
+        28,
+        (user.commits / maxCommits) * (width - padding * 2 - 180)
+      );
       const accent =
         medals[index]?.accent ||
         ["#60a5fa", "#f472b6", "#34d399"][index - medals.length] ||
@@ -174,34 +182,35 @@ app.get("/leaderboard-badge", async (req, res) => {
       const contributionShare = totalCommits
         ? (user.commits / totalCommits) * 100
         : 0;
+      const usernameDisplay = formatDisplayText(user.username, 20);
 
       const avatarClipId = `avatarClip${index}`;
 
       svgContent += `
         <defs>
           <clipPath id="${avatarClipId}">
-            <circle cx="${padding + 52}" cy="${y + 38}" r="26" />
+            <circle cx="${padding + 60}" cy="${y + rowHeight / 2}" r="26" />
           </clipPath>
         </defs>
 
         <g transform="translate(0, ${y})" filter="url(#shadow)">
-          <rect x="${padding}" y="6" width="${width - padding * 2}" height="${rowHeight - 14}" rx="18" fill="rgba(15,23,42,0.75)" stroke="rgba(148,163,184,0.15)" />
-          <rect x="${padding + 116}" y="${rowHeight - 34}" width="${barWidth}" height="10" rx="5" fill="url(#barGrad)" opacity="0.8" />
+          <rect x="${padding}" y="8" width="${width - padding * 2}" height="${rowHeight - 18}" rx="20" fill="rgba(15,23,42,0.8)" stroke="rgba(148,163,184,0.18)" />
+          <rect x="${padding + 138}" y="${rowHeight - 34}" width="${barWidth}" height="10" rx="5" fill="url(#barGrad)" opacity="0.85" />
 
-          <circle cx="${padding + 52}" cy="${rowHeight / 2}" r="32" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.3)" stroke-width="1.5" />
-          <image href="${user.avatar}" x="${padding + 26}" y="${rowHeight / 2 - 26}" width="52" height="52" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice" />
+          <circle cx="${padding + 60}" cy="${rowHeight / 2}" r="32" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.3)" stroke-width="1.5" />
+          <image href="${user.avatar}" x="${padding + 34}" y="${rowHeight / 2 - 26}" width="52" height="52" clip-path="url(#${avatarClipId})" preserveAspectRatio="xMidYMid slice" />
 
-          <g transform="translate(${padding + 92}, ${rowHeight / 2 - 2})">
+          <g transform="translate(${padding + 104}, ${rowHeight / 2 - 2})">
             <text font-size="14" font-weight="600" fill="${accent}">
               ${medalIcon}
             </text>
           </g>
 
-          <text x="${padding + 120}" y="${rowHeight / 2}" font-size="16" font-weight="600" fill="#f8fafc">
-            ${sanitize(user.username)}
+          <text x="${padding + 140}" y="${rowHeight / 2 - 2}" font-size="16" font-weight="600" fill="#f8fafc">
+            ${usernameDisplay}
           </text>
 
-          <text x="${padding + 120}" y="${rowHeight / 2 + 22}" font-size="12" fill="#94a3b8">
+          <text x="${padding + 140}" y="${rowHeight / 2 + 20}" font-size="13" fill="#94a3b8">
             ${user.commits.toLocaleString()} commits
           </text>
 
