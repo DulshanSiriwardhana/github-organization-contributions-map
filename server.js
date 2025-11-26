@@ -85,8 +85,8 @@ app.get("/leaderboard-badge", async (req, res) => {
     const statsCardGap = 24;
     const padding = 48;
     const footerHeight = 48;
-    const statsGap = 32;
-    const rowsGap = 56;
+    const statsGap = 20;
+    const rowsGap = 40;
 
     const maxCommits = leaderboard[0]?.commits || 1;
     const medals = [
